@@ -1,0 +1,55 @@
+.container{
+    width: 1200px;
+    margin: 0 auto;
+    height: calc(100% - 60px);
+    margin-top: 60px;
+  }
+   .tab_project .el-tabs__nav{
+      height: 45px;
+      line-height: 45px;
+    }
+    .tab_project .el-tabs__header{
+      margin-bottom: 20px;
+    }
+    .tab_project .el-tabs__content{
+      height: calc( 100% - 85px)
+    }
+    .el-scrollbar__wrap{
+	   overflow-x:none;
+   }
+    .tab_project{
+      height: calc(100% - 100px);
+      width: 100%;
+    }
+    .headerWrapper{
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 1500;
+    }
+    .el-tab-pane.all{
+      height: 100%
+    }
+    .main .el-pager li:hover{
+      color:  #1D695B!important;
+    }
+    .main .el-pager li.active{
+      background-color:  #1D695B!important;
+    }
+    .main .el-tabs__item.is-active{
+      color: #1D695B;
+    }
+    .main .el-tabs__item:hover{
+      color: #1D695B;
+    }
+    .main .el-tabs__active-bar{
+      background-color: #1D695B;
+    }
+    .message-item .el-divider{
+      /* padding: 0 30px; */
+      width: calc( 100% - 60px);
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+    
