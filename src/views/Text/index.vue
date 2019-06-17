@@ -43,7 +43,6 @@
         }
       },
       mounted(){
-        console.log
       }
     }
   </script>
