@@ -83,6 +83,7 @@
 <script>
 import TopBar from "@c/Topbar/index.vue";
 export default {
+  name:"Strategy",
   components: {
         TopBar
     },

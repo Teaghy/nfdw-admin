@@ -111,6 +111,7 @@
   import TopBar from "@c/Topbar/index.vue";
   import { mapActions, mapMutations } from 'vuex';
   export default {
+    name: 'Home',
     components: {
         TopBar
     },

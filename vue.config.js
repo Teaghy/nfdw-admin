@@ -60,7 +60,7 @@ module.exports = {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true, // 允许websockets跨域
-        // ws: true,
+        ws: true,
         pathRewrite: {
           '^/api': ''
         }

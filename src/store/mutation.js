@@ -4,5 +4,8 @@ export default {
     },
     mGetBiddingList(state, data) {
         state.mGetBiddingListData = data;
+    },
+    updateUserInfo(state, data){
+        state.userInfo = data
     }
 }

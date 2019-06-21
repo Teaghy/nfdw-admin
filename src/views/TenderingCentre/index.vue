@@ -9,7 +9,7 @@
             <el-upload
               class="upload-demo"
               drag
-              :action="url"  
+              :action="'/api/bidding/upload'"  
               accept=".doc,.docx"
               :before-upload="beforeUpload"
               :on-progress="progressUpload"
@@ -34,6 +34,13 @@
                 <el-button v-if="nowPercent == 100" type="success" @click="isShowProgress = false">查看结果</el-button>
               </span>
             </el-dialog>
+            <h4 class="compare_top">标的清单</h4>
+            <ul class="underlying">
+              <li><el-tag type="success">安全帽标的</el-tag></li>
+              <li><el-tag type="success">老虎钳标的</el-tag></li>
+              <li><el-tag type="success">塑胶鞋标的</el-tag></li>
+              <li></li> 
+            </ul>    
             <div class="compareBox">
                 <div class="compare_item">
                   <div class="compare_item_title">是否公开招标:</div>
@@ -137,16 +144,18 @@
 <script>
 import TopBar from "@c/Topbar/index.vue";
 import { mapActions, mapMutations } from 'vuex';
-let echarts = require('echarts/lib/echarts')
+import axios from 'axios';
+let echarts = require('echarts/lib/echarts');
 // 引入柱状图组件
 require('echarts/lib/chart/bar')
 export default {
+    name:"TenderingCentre",
     components: {
         TopBar
     },
     data(){
       return {
-        url: this.$store.state.url+"/bidding/upload",
+        url: axios.defaults.baseURL+"/bidding/upload",
         isShowProgress: false,
         nowPercent: 0,
         value: [],
@@ -389,7 +398,6 @@ export default {
       }
     },
     mounted(){
-       console.log(this.$store.state.url)
        this.drawLine();
     },
     methods:{
@@ -550,6 +558,16 @@ export default {
         font-weight:600;
         line-height:34px;
         color:#000;
+      }
+      .underlying{
+        overflow: hidden;
+        padding: 20px;
+        background-color: #fff;
+        li{
+          float:left;
+          margin-right: 20px;
+          cursor: pointer;
+        }
       }
     }
   }

@@ -1,24 +1,34 @@
 <template>
     <header class="header">
         <div class="container">
-        <h1>
-            <router-link to="/home">
-                <img src="@/assets/images/login-title.png" alt="南方电网" class="nav-logo">
-            </router-link>
-        </h1>
-        <ul class="nav">
-            <li class="nav-item"> <router-link :class="[msg==='home'? 'active' : '']" to="/home">首页</router-link></li>
-            <li class="nav-item"><router-link :class="[msg==='strategy'? 'active' : '']" to="/strategy">策略库</router-link></li>
-            <li class="nav-item"><router-link :class="[msg==='centre'? 'active' : '']" to="/centre">招标中心</router-link></li>
-            <li class="nav-item">
-                <el-input
-                    placeholder="请输入搜索内容"
-                    prefix-icon="el-icon-search"
-                    v-model="inputValue"
-                    class="search-box">
-                </el-input>
-            </li>
-        </ul>
+            <h1>
+                <router-link to="/home">
+                    <img src="@/assets/images/login-title.png" alt="南方电网" class="nav-logo">
+                </router-link>
+            </h1>
+            <ul class="nav">
+                <li class="nav-item"> <router-link :class="[msg==='home'? 'active' : '']" to="/home">首页</router-link></li>
+                <li class="nav-item"><router-link :class="[msg==='strategy'? 'active' : '']" to="/strategy">策略库</router-link></li>
+                <li class="nav-item"><router-link :class="[msg==='centre'? 'active' : '']" to="/centre">招标中心</router-link></li>
+                <li class="nav-item">
+                    <el-input
+                        placeholder="请输入搜索内容"
+                        prefix-icon="el-icon-search"
+                        v-model="inputValue"
+                        class="search-box">
+                    </el-input>
+                </li>
+                <li class="nav-item user_info">
+                    <el-dropdown @command="handleCommand">
+                        <span class="el-dropdown-link">
+                            {{userInfo.username}}<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="logout">退出</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </li>
+            </ul>
         </div>
     </header>
 </template>
@@ -32,7 +42,16 @@ export default {
     },
     data(){
         return {
-            inputValue: ''
+            inputValue: '',
+            userInfo:this.$store.state.userInfo
+        }
+    },
+    methods:{
+        handleCommand(command) {
+            if(command === 'logout'){
+                sessionStorage.removeItem('username')
+                this.$router.push({name:'login'})
+            }
         }
     }
 }
@@ -40,6 +59,13 @@ export default {
 <style>
     .nav-item .search-box input.el-input__inner:focus{
         border-color: #1D695B;
+    }
+    .el-dropdown-link {
+        cursor: pointer;
+        color: #409EFF;
+    }
+    .el-icon-arrow-down {
+        font-size: 12px;
     }
 </style>
 <style lang="less" scoped>
@@ -79,6 +105,10 @@ export default {
             list-style: none;
             position: relative;
             cursor: pointer;
+            &.user_info{
+                margin-left: 30px;
+                font-size: 14px;
+            }
             a{
                 text-decoration: none;
                 color: #1D695B;

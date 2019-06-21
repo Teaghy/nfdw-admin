@@ -1,8 +1,17 @@
 import axios from "axios";
-axios.defaults.baseURL = "http://10.96.8.56:8080";
+let baseUrl= "";   //这里是一个默认的url，可以没有
+switch (process.env.NODE_ENV) {
+    case 'development':
+        baseUrl = "/api"  //开发环境配置请求代理
+        break;
+    case 'production':
+        baseUrl = ""   //生产环境url
+        break;
+}
+axios.defaults.baseURL = baseUrl;
 
 export default {
-    //上传文件接口
+    //上传文件接口(暂时用element自带的上传插件)
     uploadBidding({ commit }, data){
         let url = "/bidding/upload";
         // let config = {
