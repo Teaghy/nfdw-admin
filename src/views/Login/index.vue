@@ -38,7 +38,7 @@
 </template>
 
 <script>
-  import {mapMutations} from 'vuex';
+  import {mapActions,mapMutations} from 'vuex';
   export default {
     name:'Login',
     data() {
@@ -94,8 +94,12 @@
         }
       };
     },
+    created(){
+      // window.location.reload()
+    },
     methods: {
       ...mapMutations(['updateUserInfo']),
+      ...mapActions(['login']),
       handleReset2() {
         this.$refs.ruleForm2.resetFields();
       },

@@ -1,141 +1,137 @@
 <template>
   <div class="centre">
     <div class="headerWrapper">
-      <top-bar :msg="'centre'"></top-bar>
+      <top-bar :msg="'centre'" :pageNo="pageNo" :pageSize="pageSize" :pClass="pClass"></top-bar>
     </div> 
     <el-scrollbar style="height:100%;" > 
-      <div class="container container-centre">          
-            <h4 class="upload-title">上传招标文件</h4>
-            <el-upload
-              class="upload-demo"
-              drag
-              :action="'/api/bidding/upload'"  
-              accept=".doc,.docx"
-              :before-upload="beforeUpload"
-              :on-progress="progressUpload"
-              :on-success="successUpload"
-              :show-file-list="false"
-              >
-              <i class="el-icon-upload"></i>
-              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-              <div class="el-upload__text">(只能上传doc/docx文件)</div>
-            </el-upload>
-            <el-dialog
-              :visible.sync="isShowProgress"
-              :close-on-click-modal="true"
-              :show-close="false"
-              width="30%"
-              multiple
-              class="progressDialog"
-              >
-              <el-progress :text-inside="true" :stroke-width="24" :percentage="nowPercent" :status="nowPercent == 100? 'success': 'warning'"></el-progress>
-              <span slot="footer" class="dialog-footer">
-                <el-button type="primary" v-if="nowPercent < 100">正在校验</el-button>
-                <el-button v-if="nowPercent == 100" type="success" @click="isShowProgress = false">查看结果</el-button>
-              </span>
-            </el-dialog>
-            <h4 class="compare_top">标的清单</h4>
-            <ul class="underlying">
-              <li><el-tag type="success">安全帽标的</el-tag></li>
-              <li><el-tag type="success">老虎钳标的</el-tag></li>
-              <li><el-tag type="success">塑胶鞋标的</el-tag></li>
-              <li></li> 
-            </ul>    
-            <div class="compareBox">
-                <div class="compare_item">
-                  <div class="compare_item_title">是否公开招标:</div>
-                  <div class="compare_item_content">{{ 0 | openStatusFmt}}</div>
+      <div class="container container-centre"> 
+          <div v-if="uploadStatus == 2">
+              <h4 class="upload-title">上传招标方案</h4>
+              <el-upload
+                class="upload-demo"
+                drag
+                :action="url"  
+                accept=".doc,.docx"
+                :before-upload="beforeUpload"
+                :on-progress="progressUpload"
+                :on-success="successUpload"
+                :show-file-list="false"
+                >
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                <div class="el-upload__text">(只能上传doc/docx文件)</div>
+              </el-upload>
+              <el-dialog
+                :visible.sync="isShowProgress"
+                :close-on-click-modal="true"
+                :show-close="false"
+                width="30%"
+                multiple
+                class="progressDialog"
+                >
+                <el-progress :text-inside="true" :stroke-width="24" :percentage="nowPercent" :status="nowPercent == 100? 'success': 'warning'"></el-progress>
+                <span slot="footer" class="dialog-footer">
+                  <el-button type="primary" v-if="nowPercent < 100">正在校验</el-button>
+                </span>
+              </el-dialog>
+          </div>         
+           
+            <div class="biding_container" v-show="biddingInfo.bList">
+                <h4 class="compare_top">标的清单</h4>
+                <ul class="underlying">
+                  <li v-for="(item,index) in biddingInfo.bList" @click="handleBlist(item.bId , item.bName)" :key="index"><el-tag :type="bId ==item.bId? 'success':'info'">{{item.bName}}</el-tag></li>
+                </ul>
+                <div class="compareBox" v-show="compareBoxflag">
+                    <div class="compare_item">
+                      <div class="compare_item_title">是否公开招标:</div>
+                      <div class="compare_item_content">{{ nowBidding.bOpen | openStatusFmt}}</div>
+                    </div>
+                    <div class="compare_item">
+                      <div class="compare_item_title">标的名称:</div>
+                      <div class="compare_item_content" v-text="nowBidding.bName"></div>
+                    </div>
+                    <div class="compare_item">
+                      <div class="compare_item_title">策略库匹配:</div>
+                      <div class="compare_item_content">
+                        <p class="success_color">已为您匹配到最接近策略-{{strategyTop1.strategyDept}} 策略相似度{{strategyTop1.similaruty | percentStatusFmt}}</p>
+                        <p class="remind_color">(您也可以在下方选择查看其他策略库对比结果)</p>
+                      </div>
+                    </div>
+                    <div class="compare_item">
+                      <div class="compare_item_title">是否符合标包策略:</div>
+                      <div class="compare_item_content error_color">{{ strategyTop1.same | strategyStatusFmt}}</div>
+                    </div>
                 </div>
-                <div class="compare_item">
-                  <div class="compare_item_title">标的名称:</div>
-                  <div class="compare_item_content">安全帽招标方案</div>
+                <h4 class="compare_top" v-show="compareBoxflag">对比结果TOP5</h4>
+                <div class="compare_top_box" v-show="compareBoxflag" >
+                  <div id="myChart" v-loading="chartLoading" :style="{width: '1000px', height: '300px'}"></div>
                 </div>
-                <div class="compare_item">
-                  <div class="compare_item_title">策略库匹配:</div>
-                  <div class="compare_item_content">
-                    <p class="success_color">已为您匹配到最接近策略-安监部/信息服务咨询 策略相识度90%</p>
-                    <p class="remind_color">(您也可以在下方选择查看其他策略库对比结果)</p>
-                  </div>
-                </div>
-                <div class="compare_item">
-                  <div class="compare_item_title">是否符合标包策略:</div>
-                  <div class="compare_item_content error_color">{{ 0 | strategyStatusFmt}}</div>
-                </div>
-            </div>
-            <h4 class="compare_top">对比结果TOP5</h4>
-            <div class="compare_top_box">
-              <div id="myChart" :style="{width: '700px', height: '300px'}"></div>
-            </div>
-            <h4 class="compare_top">手动选择对比策略</h4>
-            <div class="block">
-              <el-cascader
-                v-model="value"
-                :options="options"
-                :props="{ expandTrigger: 'hover' }"
-                @change="handleChange"
-                placeholder="请选择对比策略类别"
-              >
-              </el-cascader>
-            </div>  
-            <h4 class="compare_top">审核比对结果:</h4>
-            <div class="compare_result">
-              <el-row :gutter="20">
-                <el-col :span="5">
-                    <el-menu
-                    :default-active="activeIndex"
-                    class="el-menu-demo"
-                    @select="formSelect"
-                    text-color="#000"
-                    active-text-color="#1D695B">
-                    <el-menu-item index="1">专业资格要求<i class="el-icon-error"></i></el-menu-item>
-                    <el-menu-item index="2">信息设备修理维护<i class="el-icon-success"></i></el-menu-item>
-                    <el-menu-item index="3">信息系统测试<i class="el-icon-success"></i></el-menu-item>
-                    <el-menu-item index="4">信息系统监理<i class="el-icon-success"></i></a></el-menu-item>
-                    <el-menu-item index="5">信息系统推广建设<i class="el-icon-success"></i></a></el-menu-item>
-                  </el-menu>
-                </el-col>
-                <el-col :span="19" class="message-content">
-                  <el-tag hit color="#feefef" type="danger" class="font-color-b el-icon-error">审核比对不匹配</el-tag>
-                  <div class="message" v-show="activeIndex == '1'">
-                    <el-table
-                      :data="tableData"
-                      border   
-                      :header-cell-style="getRowClass"
-                      style="width: 100%">
-                      <el-table-column
-                        prop="date"
-                        label="策略项"
-                        header-align="center"
-                        width="180">
-                          <template slot-scope="scope">
-                            <i :class="scope.$index % 2 ? 'el-icon-success compare-success':'el-icon-error compare-error'"></i>
-                            <span style="margin-left: 10px">{{ scope.row.date }}</span>
-                          </template>
-                      </el-table-column>
-                      <el-table-column
-                        prop="name"
-                        header-align="center"
-                        label="预置策略"
-                        >
-                        <template slot-scope="scope">
-                            <span style="margin-left: 10px">{{ scope.row.name }}</span>
-                          </template>
-                      </el-table-column>
-                      <el-table-column
-                        prop="address"
-                        header-align="center"
-                        label="上传文件内容抽取">
-                        <template slot-scope="scope">
-                            <span style="margin-left: 10px">{{ scope.row.address }}</span>
-                        </template>
-                      </el-table-column>
-                    </el-table>        
-                  </div>            
-                </el-col>
-              </el-row>
-            </div>  
-            <div class="compare_footer">
-              <el-button type="primary" icon="el-icon-upload2">导出对比文件</el-button>
+                <h4 class="compare_top" v-show="compareBoxflag">手动选择对比策略</h4>
+                <div class="block" v-show="compareBoxflag">
+                  <el-cascader
+                    v-model="value"
+                    size="medium"
+                    :options="strategyTreeOption"
+                    :props="{ expandTrigger: 'hover' }"
+                    @change="handleChange"
+                    placeholder="请选择对比策略类别"
+                  >
+                  </el-cascader>
+                </div>  
+                <h4 class="compare_top" v-show="compareBoxflag">审核比对结果:</h4>
+                <div class="compare_result" v-show="compareBoxflag">
+                  <el-row :gutter="20">
+                    <el-col :span="5">
+                      <el-menu
+                        :default-active="activeIndex"
+                        class="el-menu-demo"
+                        @select="formSelect"
+                        text-color="#000"
+                        active-text-color="#1D695B">
+                        <el-menu-item v-for="(item,index) in strategyResultTabList"  :key="index" :index="item.name">{{item.name}}<i :class="item.is_same? 'el-icon-success':'el-icon-error'"></i></el-menu-item>
+                      </el-menu>
+                    </el-col>
+                    <el-col :span="19" class="message-content">
+                      <el-tag hit color="#feefef" type="danger" v-show="compareError"  class="font-color-b el-icon-error">审核比对不匹配</el-tag>
+                      <div class="message">
+                        <el-table
+                          :data="tableData"
+                          border   
+                          :header-cell-style="getRowClass"
+                          style="width: 100%">
+                          <el-table-column
+                            prop="date"
+                            label="策略项"
+                            header-align="center"
+                            width="180">
+                              <template slot-scope="scope">
+                                <i :class="scope.row.status? 'el-icon-success compare-success':'el-icon-error compare-error'"></i>
+                                <span style="margin-left: 10px">{{ scope.row.date }}</span>
+                              </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="name"
+                            header-align="center"
+                            label="预置策略"
+                            >
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px" class="strategy_data" v-html="scope.row.strategy"></span>
+                              </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="address"
+                            header-align="center"
+                            label="上传文件内容抽取">
+                            <template slot-scope="scope">
+                                <span style="margin-left: 10px" v-html="scope.row.extract"></span>
+                            </template>
+                          </el-table-column>
+                        </el-table>        
+                      </div>
+                       <el-button class="upload" v-if="value.length > 0" type="primary"  v-loading.fullscreen.lock="fullscreenLoading" @click="exportPDF" icon="el-icon-upload2">导出对比文件</el-button>            
+                    </el-col>
+                  </el-row>
+                </div>  
             </div>
       </div>  
     </el-scrollbar>   
@@ -145,9 +141,10 @@
 import TopBar from "@c/Topbar/index.vue";
 import { mapActions, mapMutations } from 'vuex';
 import axios from 'axios';
-let echarts = require('echarts/lib/echarts');
-// 引入柱状图组件
-require('echarts/lib/chart/bar')
+import {addRedem , addgreen} from "@/libs/tools";
+// let echarts = require('echarts/lib/echarts');
+// // 引入柱状图组件
+// require('echarts/lib/chart/bar')
 export default {
     name:"TenderingCentre",
     components: {
@@ -155,256 +152,42 @@ export default {
     },
     data(){
       return {
-        url: axios.defaults.baseURL+"/bidding/upload",
+        url: axios.defaults.baseURL+"/project/upload",
+        pageNo: 1,
+        pageSize: 10,
         isShowProgress: false,
+        chartLoading: true,
+        fullscreenLoading: false, //下载loading
         nowPercent: 0,
-        value: [],
-        options: [{
-          value: 'wuzhilei',
-          label: '物质类',
-          children: [{
-            value: 'anjianbu',
-            label: '安监部',
-            children: [{
-              value: 'yizhi',
-              label: '信息服务咨询'
-            }, {
-              value: 'fankui',
-              label: '信息设备修理维护'
-            }, {
-              value: 'xiaolv',
-              label: '信息系统测试'
-            }, {
-              value: 'kekong',
-              label: '信息系统监理'
-            }, {
-              value: 'kekong',
-              label: '信息系统建设推广'
-            }]
-          }, {
-            value: 'daohang',
-            label: '办公室',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          },
-          {
-            value: 'daohang',
-            label: '生计部',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          },
-          {
-            value: 'daohang',
-            label: '市场部',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          },
-          {
-            value: 'daohang',
-            label: '信息部',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          }]
-          }, {
-            value: 'zujian',
-            label: '非物质类',
-            children: [{
-              value: 'basic',
-              label: 'Basic',
-              children: [{
-                value: 'layout',
-                label: 'Layout 布局'
-              }, {
-                value: 'color',
-                label: 'Color 色彩'
-              }, {
-                value: 'typography',
-                label: 'Typography 字体'
-              }, {
-                value: 'icon',
-                label: 'Icon 图标'
-              }, {
-                value: 'button',
-                label: 'Button 按钮'
-              }]
-            }, {
-              value: 'form',
-              label: 'Form',
-              children: [{
-                value: 'radio',
-                label: 'Radio 单选框'
-              }, {
-                value: 'checkbox',
-                label: 'Checkbox 多选框'
-              }, {
-                value: 'input',
-                label: 'Input 输入框'
-              }, {
-                value: 'input-number',
-                label: 'InputNumber 计数器'
-              }, {
-                value: 'select',
-                label: 'Select 选择器'
-              }, {
-                value: 'cascader',
-                label: 'Cascader 级联选择器'
-              }, {
-                value: 'switch',
-                label: 'Switch 开关'
-              }, {
-                value: 'slider',
-                label: 'Slider 滑块'
-              }, {
-                value: 'time-picker',
-                label: 'TimePicker 时间选择器'
-              }, {
-                value: 'date-picker',
-                label: 'DatePicker 日期选择器'
-              }, {
-                value: 'datetime-picker',
-                label: 'DateTimePicker 日期时间选择器'
-              }, {
-                value: 'upload',
-                label: 'Upload 上传'
-              }, {
-                value: 'rate',
-                label: 'Rate 评分'
-              }, {
-                value: 'form',
-                label: 'Form 表单'
-              }]
-            }, {
-              value: 'data',
-              label: 'Data',
-              children: [{
-                value: 'table',
-                label: 'Table 表格'
-              }, {
-                value: 'tag',
-                label: 'Tag 标签'
-              }, {
-                value: 'progress',
-                label: 'Progress 进度条'
-              }, {
-                value: 'tree',
-                label: 'Tree 树形控件'
-              }, {
-                value: 'pagination',
-                label: 'Pagination 分页'
-              }, {
-                value: 'badge',
-                label: 'Badge 标记'
-              }]
-            }, {
-              value: 'notice',
-              label: 'Notice',
-              children: [{
-                value: 'alert',
-                label: 'Alert 警告'
-              }, {
-                value: 'loading',
-                label: 'Loading 加载'
-              }, {
-                value: 'message',
-                label: 'Message 消息提示'
-              }, {
-                value: 'message-box',
-                label: 'MessageBox 弹框'
-              }, {
-                value: 'notification',
-                label: 'Notification 通知'
-              }]
-            }, {
-              value: 'navigation',
-              label: 'Navigation',
-              children: [{
-                value: 'menu',
-                label: 'NavMenu 导航菜单'
-              }, {
-                value: 'tabs',
-                label: 'Tabs 标签页'
-              }, {
-                value: 'breadcrumb',
-                label: 'Breadcrumb 面包屑'
-              }, {
-                value: 'dropdown',
-                label: 'Dropdown 下拉菜单'
-              }, {
-                value: 'steps',
-                label: 'Steps 步骤条'
-              }]
-            }, {
-              value: 'others',
-              label: 'Others',
-              children: [{
-                value: 'dialog',
-                label: 'Dialog 对话框'
-              }, {
-                value: 'tooltip',
-                label: 'Tooltip 文字提示'
-              }, {
-                value: 'popover',
-                label: 'Popover 弹出框'
-              }, {
-                value: 'card',
-                label: 'Card 卡片'
-              }, {
-                value: 'carousel',
-                label: 'Carousel 走马灯'
-              }, {
-                value: 'collapse',
-                label: 'Collapse 折叠面板'
-              }]
-            }]
-          }],
-        activeIndex: '1',
-        tableData: [{
-            date: '注册资本要求',
-            name: '王小虎',
-            address: '上海市普陀区金沙江路 1518 弄'
-          }, {
-            date: '业绩要求',
-            name: '业绩要求',
-            address: '上海市普陀区金沙江路 1517 弄'
-          }, {
-            date: '投标人资格要求',
-            name: '王小虎',
-            address: '上海市普陀区金沙江路 1519 弄'
-          }, {
-            date: '证书要求',
-            name: '王小虎',
-            address: '上海市普陀区金沙江路 1516 弄'
-          }]
+        nowBidding:{},
+        uploadStatus: this.$route.params.uploadStatus || 2,
+        bId:1, //标的id
+        bName:'',//标的名字,
+        pClass: 1, //物资类 1与非物资类0
+        strategyResultInfo:{},//标的源策略
+        strategyResultTabList:[], //审核比对结果左侧数据
+        compareStrategyResultInfo:'',//标的对比策略
+        compareBoxflag:false, //标的清单比较结果显示状态
+        compareError: false, // 审核比对不匹配
+        value: [], //级联选择器选择的值
+        activeIndex: '0',
+        tableData: [],
+        strategyTop1:{
+          similaruty: 0,
+          strategyDept:'',
+          same: true
+        }
       }
     },
-    mounted(){
-       this.drawLine();
+    created(){
+      this.getStrategyTree()
     },
     methods:{
-      ...mapActions(['uploadBidding']),
+      ...mapActions(['uploadBidding','getCompareStrategy','getStrategyTree','getBiddingTop','exportComparePDF']),
       ...mapMutations(['uploadBiddingInfo']),
       beforeUpload(file){
-        this.isShowProgress =true
+        this.isShowProgress = true
+        this.nowPercent = 0
       },
       // 上传进度条
       progressUpload(event, file, fileList){
@@ -414,12 +197,75 @@ export default {
       },
       // 得到上传文件后的返回值
       successUpload(response, file, fileList){
-        console.log(response)
         this.uploadBiddingInfo(response.data)
+        this.isShowProgress = false
       },
-      drawLine() {
-        let myChart = echarts.init(document.getElementById('myChart'))
-        // let myChart = this.$echarts.init(document.getElementById('myChart'))
+      //查看标的的清单详情
+      handleBlist( id , name){
+        this.bId = id
+        this.bName = name
+        this.pClass = this.biddingInfo.pClass;
+        this.compareBoxflag = true;
+        this.biddingInfo.bList.forEach((item,index)=>{
+            if(item.bId === id){
+              this.nowBidding=item
+            }
+        });
+        this.getBiddingTop5(id)
+      },
+      //获取top5数据
+      getBiddingTop5(bId){
+        let queryParam ={
+          bId
+        }
+        this.chartLoading =true;
+        this.getBiddingTop(this.$qs.stringify(queryParam))
+          .then(res => {
+            let biddingTop5X=[];
+            let biddingTop5Y=[];
+            this.biddingTopData.forEach((item,index)=>{
+                let xData = item.middle.deptName + '\n'+item.middle.firstDir+'\n'+item.middle.secDir;
+                biddingTop5X.push(xData)
+                biddingTop5Y.push(item.left)
+            })
+            //得到最符合策略的数据
+            this.strategyTop1.strategyDept =this.biddingTopData[0].middle.deptName + '/' + this.biddingTopData[0].middle.firstDir + '/' +this.biddingTopData[0].middle.secDir
+            this.strategyTop1.similaruty = this.biddingTopData[0].left
+            this.strategyTop1.same = this.biddingTopData[0].right.result[this.bName].diff['标包划分原则']['标包划分原则'].is_same
+            this.drawLine(biddingTop5X,biddingTop5Y);
+          })
+       
+      },
+      //获取对比策略
+      getCompareStragy(pClass,deptName,firstDir,secDir){
+         let queryParam ={
+          bId: this.bId,
+          pClass,
+          deptName,
+          firstDir,
+          secDir
+        }
+        this.exportParam = queryParam;
+        this.getCompareStrategy(this.$qs.stringify(queryParam))
+          .then(res => {
+            if (res.code == '0') {
+              this.strategyResultInfo = res.data.right.result[this.bName].diff
+              this.showTableRsult()
+            }
+          })
+          .catch(error => {
+            this.$message({
+              type:'error',
+              message: error,
+              duration: 1500
+            });
+          });       
+      },
+      //绘制图表
+      drawLine(xData,yData) {
+        
+        var myChart = this.$echarts.init(document.getElementById('myChart'))
+        myChart.clear()
         // 绘制图表
         var option = {
             tooltip: {
@@ -428,8 +274,7 @@ export default {
                     type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
                 },
                  formatter: function(params){
-                   console.log(params)
-                   return '相似度:'+params[0].data+'%'
+                   return '相似度:'+params[0].data
                  }
             },
             grid: {
@@ -443,13 +288,16 @@ export default {
                 axisLabel: {  
                   show: true,  
                   interval: 'auto',  
-                  formatter: '{value} %'  
+                  formatter: '{value}'  
                 },  
                 show: true  
             },
             xAxis: {
                 type: 'category',
-                data: ['物资类', '物资类', '物资类', '物资类', '物资类' ]
+                data:xData,
+                axisLabel: {  
+                  interval:0
+                } 
             },
             series: [
                 {
@@ -457,25 +305,76 @@ export default {
                     stack: '总量',
                     color: '#00B0F0',
                     barWidth : 30,
-                    label: {
-                      normal: {
-                          show: true,
-                          position: 'top',
-                          formatter: '{c}%'
-                      }
-                    },
-                    data: [10, 50 , 60, 40 , 90]
+                    // label: {
+                    //   normal: {
+                    //       show: true,
+                    //       position: 'top',
+                    //       formatter: '{c}'
+                    //   }
+                    // },
+                    barCategoryGap:"80%",
+                    data:yData
                 }
             ]
         };
-        myChart.setOption(option);
+        myChart.setOption(option, true);
+        this.chartLoading = false;
+        myChart.on('click', (param)=> {
+          var strategyArr = param.name.split('\n');
+          strategyArr.unshift(this.pClass)
+          this.value = strategyArr
+          this.strategyResultInfo = this.biddingTopData[param.dataIndex].right.result[this.bName].diff;
+          this.showTableRsult();
+        });
       },
-      handleChange(value) {
-        console.log(value);
+      //审核对比结果展示
+      showTableRsult(){
+          var tabList=[]
+          for(var i in this.strategyResultInfo){
+            if(i == '供应商资格预审（资质能力评价）' || i=='业主代表'|| i == '招标方式' || i == '标包划分原则'){
+              continue;
+            }
+            var itemObj = {
+                name: i,
+                is_same: true
+            }
+            for(var j in this.strategyResultInfo[i]){
+              if(!this.strategyResultInfo[i][j].is_same){
+                  itemObj.is_same = false
+              }
+            }
+            tabList.push(itemObj)
+          }
+          this.strategyResultTabList = tabList
+          this.formSelect('商务详细评审')
       },
+      //手动选择对比结果参数
+      handleChange(value) { 
+        var pClass= value[0];
+        var deptName =value[1];
+        var firstDir = value[2];
+        var secDir = value[3];
+        this.getCompareStragy(pClass,deptName,firstDir,secDir)
+      },
+      //点击审核比对结果左侧tab栏显示右边的表格
       formSelect(key, keyPath){
+         this.compareError = false
         this.activeIndex = key
-        console.log(this.activeIndex)
+        var tableData=[]
+        for(var i in this.strategyResultInfo[key]){
+          var item={
+            date:i,
+            status:this.strategyResultInfo[key][i].is_same,
+            strategy:addgreen(this.strategyResultInfo[key][i].string2 , this.strategyResultInfo[key][i].diff2_idx),
+            extract: addRedem(this.strategyResultInfo[key][i].string1 , this.strategyResultInfo[key][i].diff1_idx)
+          }
+
+          if(!this.strategyResultInfo[key][i].is_same){
+            this.compareError = true
+          }
+          tableData.push(item)
+        }
+        this.tableData=tableData
       },
       getRowClass({ row, column, rowIndex, columnIndex }) {
         if (rowIndex == 0) {
@@ -483,11 +382,53 @@ export default {
         } else {
             return ''
         }
+      },
+      //导出PDF
+      exportPDF(){
+        this.fullscreenLoading = true;
+        if(this.value.length == 0){
+            this.$message.error('请选择对比策略');
+            return false
+        }
+        let queryParam ={
+          bId: this.bId,
+          pClass: this.value[0],
+          deptName: this.value[1],
+          firstDir:this.value[2],
+          secDir:this.value[3]
+        }    
+        this.exportComparePDF(this.$qs.stringify(queryParam))
+        .then(res =>{
+          this.fullscreenLoading = false;
+          //下载PDF
+          const url = window.URL.createObjectURL(new Blob([res.data]));
+          const link = document.createElement('a');
+          let head = res.headers['content-disposition'];
+          let fname = 'report.pdf';
+          if (head) {
+              try {
+                  fname = head.split(';')[1].split('=')[1]
+              } catch (err){
+                  console.log('can not get pdf name');
+              }
+
+          }
+          link.href = url;
+          link.setAttribute('download', fname);
+          document.body.appendChild(link);
+          link.click();
+        })
       }
     },
     computed: {
       biddingInfo () {
         return this.$store.state.uploadBiddingInfoData;　　//需要监听的数据
+      },
+      strategyTreeOption(){
+        return this.$store.state.strategyTreeData; //树的数据
+      },
+      biddingTopData(){
+        return this.$store.state.biddingTopData;
       }
     }
 }
@@ -541,6 +482,17 @@ export default {
         margin-right: 10px;
       }
     }
+  }
+  .centre .el-cascader.el-cascader--medium{
+      width: 300px;
+  }
+  .message em{
+    color: #F80000;
+    font-style: normal;
+  }
+  .strategy_data i{
+    color: #00B050;
+    font-style: normal;
   }
 </style>
 <style lang="less" scoped>
@@ -633,17 +585,15 @@ export default {
       align-items: center;
     }
   }
-  .compare_footer{
-    text-align: center;
-    margin: 40px 0;
-    button{
-      border:none;
-      font-size: 14px;
-      width:180px;
-      height:40px;
-      background:linear-gradient(313deg,rgba(29,105,91,1) 0%,rgba(68,155,119,1) 100%);
-      border-radius:2px;
-    }
+  .upload{
+    border:none;
+    font-size: 14px;
+    width:180px;
+    height:40px;
+    background:linear-gradient(313deg,rgba(29,105,91,1) 0%,rgba(68,155,119,1) 100%);
+    border-radius:2px;
+    display: block;
+    margin: 5px auto;
   }
   .message-content{
     padding: 30px!important;
@@ -652,7 +602,5 @@ export default {
     .font-color-b{
       margin-bottom: 30px;
     }
-  }
-   
-  
+  }   
 </style>

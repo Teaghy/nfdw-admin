@@ -1,52 +1,22 @@
 <template>
   <div class="home">
     <div class="headerWrapper">
-      <top-bar :msg="'home'"></top-bar>
+      <top-bar :msg="'home'" ref="searchBar" :pageNo="pageNo" :pageSize="pageSize" :pClass="pClass" @search="searchValue"></top-bar>
     </div>
     <div class="container">
       <div class="main">
         <el-tabs v-model="activeName" class="tab_project" @tab-click="handleClick">
-          <el-tab-pane class="all" label="全部项目" name="first">
+          <el-tab-pane v-for="(item,index) in tabList" :key="index" class="all" :label="item.label" :name="item.name">
              <div class="scroll-project">
                 <el-scrollbar style="height:100%">
                     <ul class="all_project">
-                      <li v-for="(item,index) in 10" :key="index">
-                      <p>广州供电局有限公司2015年下半年至2016年上半年安全工器具类物资框架招标</p>
+                      <li v-for="(item,index) in mGetBiddingListData" @click="biddingDetail(item.pId)" :key="index">
+                      <p>{{item.pName}}</p>
                       <div class="time">
                         <i class="el-icon-time icon_time"></i>
-                        <span>07-07 12:00</span>
+                        <span>{{item.pCreatime}}</span>
                       </div>
                       <div class="notice">招标公告</div>
-                      </li>
-                    </ul>
-                </el-scrollbar>
-              </div>
-          </el-tab-pane>
-          <el-tab-pane label="物资类" name="second">
-            <div class="scroll-project">
-                <el-scrollbar style="height:100%">
-                    <ul class="all_project">
-                      <li v-for="(item,index) in 5" :key="index">
-                      <p>广州供电局有限公司2015年下半年至2016年上半年安全工器具类物资框架招标</p>
-                        <div class="time">
-                          <i class="el-icon-time icon_time"></i>
-                          <span>07-07 12:00</span>
-                        </div> 
-                      </li>
-                    </ul>
-                </el-scrollbar>
-              </div>
-          </el-tab-pane>
-          <el-tab-pane label="非物质类" name="third">
-            <div class="scroll-project">
-                <el-scrollbar style="height:100%">
-                    <ul class="all_project">
-                      <li v-for="(item,index) in 4" :key="index">
-                      <p>广州供电局有限公司2015年下半年至2016年上半年安全工器具类物资框架招标</p>
-                        <div class="time">
-                          <i class="el-icon-time icon_time"></i>
-                          <span>07-07 12:00</span>
-                        </div> 
                       </li>
                     </ul>
                 </el-scrollbar>
@@ -57,14 +27,21 @@
           :current-page.sync="pageNo"
           background
           layout="prev, pager, next"
-          :total="100"
+          :total="total"
           @current-change="updateData"
           hide-on-single-page>
         </el-pagination>
       </div>
-      <div class="aside">
+      <!-- <div class="aside">
           <h4 class="newpublish">最新发布</h4>
           <ul class="new_list">
+            <li>
+              <p>关于XXXXX项目的招标</p>
+              <div class="time">
+                <i class="el-icon-time icon_time"></i>
+                <span>07-07 12:00</span>
+              </div> 
+            </li>
             <li>
               <p>关于XXXXX项目的招标</p>
               <div class="time">
@@ -93,15 +70,8 @@
                 <span>07-07 12:00</span>
               </div> 
             </li>
-             <li>
-              <p>关于XXXXX项目的招标</p>
-              <div class="time">
-                <i class="el-icon-time icon_time"></i>
-                <span>07-07 12:00</span>
-              </div> 
-            </li>
           </ul>
-      </div>
+      </div> -->
       
     </div>   
   </div>
@@ -109,7 +79,7 @@
 </template>
 <script>
   import TopBar from "@c/Topbar/index.vue";
-  import { mapActions, mapMutations } from 'vuex';
+  import { mapActions, mapMutations, mapState} from 'vuex';
   export default {
     name: 'Home',
     components: {
@@ -118,26 +88,65 @@
     data() {
       return {
         activeName: 'first',
-        queryParam:{
-          pageNo: 1,
-          pageSize: 10
-        },
         pageNo: 1,
-        pageSize: 10
+        pageSize: 10,
+        total: 1,
+        pClass: '',
+        pName:'',
+        tabList:[
+          {label: '全部项目', name: 'first'},
+          {label: '物资类', name: 'second'},
+          {label: '非物资类', name: 'third'}
+        ]
       };
+    },
+    created(){
+      this.updateData();
     },
     methods: {
       ...mapActions([
-        'mGetBiddingList'
+        'getBiddingList',
+        'getBiddingDetail'
       ]),
-       handleClick(tab, event) {
-        console.log(tab.name, event);
-        this.pageNo = 1
+      searchValue(total){
+        this.total = total;
       },
-      updateData(page){
-        console.log(page)
-        this.mGetBiddingList(this.queryParam)
+      handleClick(tab, event) {
+        if(tab.name === 'first'){
+          this.pClass = ''
+        }else if(tab.name === 'second'){
+          this.pClass = 1
+        }else if(tab.name === 'third'){
+          this.pClass = 0
+        }
+        this.pageNo = 1
+        this.updateData()
+      },
+      updateData(){ 
+        this.$nextTick(function () { 
+            this.$refs.searchBar.updateData() 
+         });        
+      },
+      biddingDetail(pId){
+        let queryParam ={
+          pId
+        }
+        this.getBiddingDetail(this.$qs.stringify(queryParam))
+          .then(res =>{
+            this.$router.push({name:'centre',params:{uploadStatus: 1}})
+          })
+          .catch(error => {
+            this.$message({
+              type:'error',
+              message: error,
+              duration: 1500
+            });
+        });   
+        
       }
+    },
+    computed:{
+       ...mapState(["mGetBiddingListData"])
     }
   };
 </script>
