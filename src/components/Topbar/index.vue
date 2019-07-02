@@ -88,6 +88,7 @@
             console.log('清空了')
         },
         cleanBiddingInfo(){
+            this.$emit('clear', 2)
             this.uploadBiddingInfo({})
         },
         updateData(){

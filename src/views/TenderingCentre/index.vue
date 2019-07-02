@@ -1,7 +1,7 @@
 <template>
   <div class="centre">
     <div class="headerWrapper">
-      <top-bar :msg="'centre'" :pageNo="pageNo" :pageSize="pageSize" :pClass="pClass"></top-bar>
+      <top-bar :msg="'centre'" :pageNo="pageNo" @clear="updateComponent" :pageSize="pageSize" :pClass="pClass"></top-bar>
     </div> 
     <el-scrollbar style="height:100%;" > 
       <div class="container container-centre"> 
@@ -100,13 +100,13 @@
                           :header-cell-style="getRowClass"
                           style="width: 100%">
                           <el-table-column
-                            prop="date"
+                            prop="term"
                             label="策略项"
                             header-align="center"
                             width="180">
                               <template slot-scope="scope">
                                 <i :class="scope.row.status? 'el-icon-success compare-success':'el-icon-error compare-error'"></i>
-                                <span style="margin-left: 10px">{{ scope.row.date }}</span>
+                                <span style="margin-left: 10px">{{ scope.row.term }}</span>
                               </template>
                           </el-table-column>
                           <el-table-column
@@ -188,6 +188,10 @@ export default {
       beforeUpload(file){
         this.isShowProgress = true
         this.nowPercent = 0
+      },
+      //点击招标中心 还原上传组件
+      updateComponent(data){
+        this.uploadStatus= data
       },
       // 上传进度条
       progressUpload(event, file, fileList){
@@ -363,7 +367,7 @@ export default {
         var tableData=[]
         for(var i in this.strategyResultInfo[key]){
           var item={
-            date:i,
+            term:i,
             status:this.strategyResultInfo[key][i].is_same,
             strategy:addgreen(this.strategyResultInfo[key][i].string2 , this.strategyResultInfo[key][i].diff2_idx),
             extract: addRedem(this.strategyResultInfo[key][i].string1 , this.strategyResultInfo[key][i].diff1_idx)
@@ -404,15 +408,7 @@ export default {
           const url = window.URL.createObjectURL(new Blob([res.data]));
           const link = document.createElement('a');
           let head = res.headers['content-disposition'];
-          let fname = 'report.pdf';
-          if (head) {
-              try {
-                  fname = head.split(';')[1].split('=')[1]
-              } catch (err){
-                  console.log('can not get pdf name');
-              }
-
-          }
+          let fname = this.nowBidding.bName + '检查报告.pdf';
           link.href = url;
           link.setAttribute('download', fname);
           document.body.appendChild(link);
@@ -484,7 +480,7 @@ export default {
     }
   }
   .centre .el-cascader.el-cascader--medium{
-      width: 300px;
+      width: 380px;
   }
   .message em{
     color: #F80000;

@@ -37,16 +37,6 @@ const router = new Router({
       name: 'login',
       component: () => import('@/views/Login/index')
     },
-     {
-      path: '/text',
-      name: 'text',
-      component: () => import('@/views/Text/index')
-    },
-    {
-      path: '/text2',
-      name: 'text2',
-      component: () => import('@/components/Topbar/index')
-    },
     {
       path: "*",
       redirect: "/login"
