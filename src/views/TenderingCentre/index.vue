@@ -134,7 +134,8 @@
                 </div>  
             </div>
       </div>  
-    </el-scrollbar>   
+    </el-scrollbar>  
+    <el-backtop target=".el-scrollbar .el-scrollbar__wrap"></el-backtop> 
   </div>
 </template>
 <script>
@@ -201,8 +202,16 @@ export default {
       },
       // 得到上传文件后的返回值
       successUpload(response, file, fileList){
-        this.uploadBiddingInfo(response.data)
-        this.isShowProgress = false
+        if(response.code === '0'){
+          this.uploadBiddingInfo(response.data)         
+        }else{
+           this.$message({
+              type:'error',
+              message: '您上传的文档不是招标方案，请上传招标方案文档!',
+              duration: 1500
+            });
+        }
+         this.isShowProgress = false
       },
       //查看标的的清单详情
       handleBlist( id , name){
@@ -230,7 +239,7 @@ export default {
             this.biddingTopData.forEach((item,index)=>{
                 let xData = item.middle.deptName + '\n'+item.middle.firstDir+'\n'+item.middle.secDir;
                 biddingTop5X.push(xData)
-                biddingTop5Y.push(item.left)
+                biddingTop5Y.push(item.left*100)
             })
             //得到最符合策略的数据
             this.strategyTop1.strategyDept =this.biddingTopData[0].middle.deptName + '/' + this.biddingTopData[0].middle.firstDir + '/' +this.biddingTopData[0].middle.secDir
@@ -278,7 +287,7 @@ export default {
                     type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
                 },
                  formatter: function(params){
-                   return '相似度:'+params[0].data
+                   return '相似度:'+params[0].data.toFixed(2)+'%';
                  }
             },
             grid: {
@@ -292,7 +301,7 @@ export default {
                 axisLabel: {  
                   show: true,  
                   interval: 'auto',  
-                  formatter: '{value}'  
+                  formatter: '{value}%'  
                 },  
                 show: true  
             },
@@ -309,13 +318,6 @@ export default {
                     stack: '总量',
                     color: '#00B0F0',
                     barWidth : 30,
-                    // label: {
-                    //   normal: {
-                    //       show: true,
-                    //       position: 'top',
-                    //       formatter: '{c}'
-                    //   }
-                    // },
                     barCategoryGap:"80%",
                     data:yData
                 }
@@ -414,6 +416,11 @@ export default {
           document.body.appendChild(link);
           link.click();
         })
+      },
+      //监听滚动事件
+      handleScroll(){
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
+        console.log(scrollTop)
       }
     },
     computed: {
