@@ -10,7 +10,7 @@ const router = new Router({
       name: 'home',
       meta: {
         title: '首页',
-        requireAuth: true,
+        // requireAuth: true,
       },
       component: () => import('@/views/Home/index')
     },
@@ -39,7 +39,7 @@ const router = new Router({
     },
     {
       path: "*",
-      redirect: "/login"
+      redirect: "/home"
     }
   ]
 })
@@ -50,17 +50,17 @@ const router = new Router({
 
 
 //判断是否需要登录权限 以及是否登录
-router.beforeEach((to, from, next) => {
-  if (to.matched.some(res => res.meta.requireAuth)) {// 判断是否需要登录权限
-      if (sessionStorage.getItem('username')) {// 判断是否登录
-        next()
-      } else {// 没登录则跳转到登录界面
-        next({
-          path: '/login'
-        })
-      }
-  } else {
-    next()
-  }
- })
+// router.beforeEach((to, from, next) => {
+//   if (to.matched.some(res => res.meta.requireAuth)) {// 判断是否需要登录权限
+//       if (sessionStorage.getItem('username')) {// 判断是否登录
+//         next()
+//       } else {// 没登录则跳转到登录界面
+//         next({
+//           path: '/home'
+//         })
+//       }
+//   } else {
+//     next()
+//   }
+//  })
 export default router

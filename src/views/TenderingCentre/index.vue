@@ -110,18 +110,18 @@
                               </template>
                           </el-table-column>
                           <el-table-column
-                            prop="name"
+                            prop="strategy"
                             header-align="center"
-                            label="预置策略"
+                            label="策略内容"
                             >
                             <template slot-scope="scope">
                                 <span style="margin-left: 10px" class="strategy_data" v-html="scope.row.strategy"></span>
                               </template>
                           </el-table-column>
                           <el-table-column
-                            prop="address"
+                            prop="extract"
                             header-align="center"
-                            label="上传文件内容抽取">
+                            label="招标方案内容">
                             <template slot-scope="scope">
                                 <span style="margin-left: 10px" v-html="scope.row.extract"></span>
                             </template>
@@ -237,7 +237,7 @@ export default {
             let biddingTop5X=[];
             let biddingTop5Y=[];
             this.biddingTopData.forEach((item,index)=>{
-                let xData = item.middle.deptName + '\n'+item.middle.firstDir+'\n'+item.middle.secDir;
+                let xData = item.middle.deptName + ' \n'+item.middle.firstDir+' \n'+item.middle.secDir;
                 biddingTop5X.push(xData)
                 biddingTop5Y.push(item.left*100)
             })
@@ -276,7 +276,6 @@ export default {
       },
       //绘制图表
       drawLine(xData,yData) {
-        
         var myChart = this.$echarts.init(document.getElementById('myChart'))
         myChart.clear()
         // 绘制图表
@@ -303,7 +302,11 @@ export default {
                   interval: 'auto',  
                   formatter: '{value}%'  
                 },  
-                show: true  
+                min: function(value) {
+                    return Math.ceil(value.min - 10);
+                },
+                show: true,
+                scale: true
             },
             xAxis: {
                 type: 'category',
@@ -326,7 +329,7 @@ export default {
         myChart.setOption(option, true);
         this.chartLoading = false;
         myChart.on('click', (param)=> {
-          var strategyArr = param.name.split('\n');
+          var strategyArr = param.name.split(' \n');
           strategyArr.unshift(this.pClass)
           this.value = strategyArr
           this.strategyResultInfo = this.biddingTopData[param.dataIndex].right.result[this.bName].diff;
@@ -415,6 +418,9 @@ export default {
           link.setAttribute('download', fname);
           document.body.appendChild(link);
           link.click();
+        } , err =>{
+          this.$message.error('导出失败');
+          this.fullscreenLoading = false;
         })
       },
       //监听滚动事件

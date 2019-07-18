@@ -22,7 +22,7 @@
                     >
                     </el-input>
                 </li>
-                <li class="nav-item user_info">
+                <!-- <li class="nav-item user_info">
                     <el-dropdown @command="handleCommand">
                         <span class="el-dropdown-link">
                             {{username}}<i class="el-icon-arrow-down el-icon--right"></i>
@@ -31,7 +31,7 @@
                             <el-dropdown-item command="logout">退出</el-dropdown-item>
                         </el-dropdown-menu>
                     </el-dropdown>
-                </li>
+                </li> -->
             </ul>
         </div>
     </header>

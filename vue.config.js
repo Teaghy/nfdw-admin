@@ -58,7 +58,7 @@ module.exports = {
     }, // 错误、警告在页面弹出
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://10.95.130.177:8080',
         changeOrigin: true, // 允许websockets跨域
         ws: true,
         pathRewrite: {
